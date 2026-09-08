@@ -26,3 +26,9 @@ replay_pid*
 *.classpath
 *.mvn
 *target
+
+# Secrets
+.env
+
+# Eclipse build output
+bin/

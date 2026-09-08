@@ -1,12 +1,10 @@
 package com.example.ecommerceproject.security;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.tomcat.websocket.AuthenticationException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -21,37 +19,35 @@ import io.jsonwebtoken.SignatureAlgorithm;
 @Component
 public class JwtUtil {
 
+    private static final String TOKEN_HEADER = "Authorization";
+    private static final String TOKEN_PREFIX = "Bearer ";
 
-	private final JwtParser jwtParser;
-	private final String TOKEN_HEADER = "Authorization";
-    private final String TOKEN_PREFIX = "Bearer ";
-	private String jwt_key = "botlandsecretkey";
-    private long tokenValidTime = 60*60*1000;
+    private final JwtParser jwtParser;
+    private final byte[] jwtKey;
+    private final long expirationMinutes;
 
-  
-    public JwtUtil(){
-        this.jwtParser = Jwts.parser().setSigningKey(jwt_key);
+    public JwtUtil(@Value("${jwt.secret}") String secret,
+                   @Value("${jwt.expiration-minutes:60}") long expirationMinutes) {
+        if (secret == null || secret.getBytes(StandardCharsets.UTF_8).length < 32) {
+            throw new IllegalStateException("jwt.secret 必須 >= 32 字元（HS256 需要 256-bit 金鑰）");
+        }
+        this.jwtKey = secret.getBytes(StandardCharsets.UTF_8);
+        this.expirationMinutes = expirationMinutes;
+        this.jwtParser = Jwts.parser().setSigningKey(jwtKey);
     }
-    
+
     public String getEmail(Claims claims) {
         return claims.getSubject();
     }
 
-    private List<String> getRoles(Claims claims) {
-        return (List<String>) claims.get("roles");
-    }
-
     public String createToken(User user) {
         Claims claims = Jwts.claims().setSubject(user.getEmail());
-        claims.put("firstName",user.getFirstName());
-        claims.put("lastName",user.getLastName());
-//        Date tokenStartTime = new Date();
-//        Date tokenValidity = new Date(tokenStartTime.getTime() + TimeUnit.MINUTES.toMillis(tokenValidTime));
+        claims.put("firstName", user.getFirstName());
+        claims.put("lastName", user.getLastName());
         return Jwts.builder()
                 .setClaims(claims)
-                .setExpiration(new Date(System.currentTimeMillis()+ TimeUnit.MINUTES.toMillis(tokenValidTime)))
-//              .setExpiration(tokenValidity)
-                .signWith(SignatureAlgorithm.HS256, jwt_key)
+                .setExpiration(new Date(System.currentTimeMillis() + expirationMinutes * 60_000L))
+                .signWith(SignatureAlgorithm.HS256, jwtKey)
                 .compact();
     }
 
@@ -59,12 +55,8 @@ public class JwtUtil {
         return jwtParser.parseClaimsJws(token).getBody();
     }
     
-    public boolean isExpiredClaims(Claims claims) throws AuthenticationException {
-        try {
-            return claims.getExpiration().after(new Date());
-        } catch (Exception exception) {
-            throw exception;
-        }
+    public boolean isValid(Claims claims) {
+        return claims.getExpiration().after(new Date());
     }
 
     public Claims resolveClaims(HttpServletRequest httpServletRequest) {

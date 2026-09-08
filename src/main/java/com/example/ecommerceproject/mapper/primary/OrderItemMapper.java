@@ -5,6 +5,7 @@ package com.example.ecommerceproject.mapper.primary;
 import java.util.List;
 
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import com.example.ecommerceproject.entity.OrderItem;
@@ -17,7 +18,7 @@ public interface OrderItemMapper extends MPJBaseMapper<OrderItem> {
 //	List<OrderItem> getOrderItemsByOrderId(int orderId);
 	
 	@Select("select i.*, p.name as productName from orderitem i join product p on i.product_Id=p.product_Id where order_id=#{orderId} ")
-	List<OrderItem> getOrderItemsByOrderId(int orderId);
+	List<OrderItem> getOrderItemsByOrderId(@Param("orderId")Integer orderId);
 	
  
 	

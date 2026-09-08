@@ -40,9 +40,9 @@ public class UserController  {
 	 log.info("/arole");
         return roleService.getRoleInfo((Integer) 1);
     }
-	
+    
+	@PreAuthorize("@accessGuard.isSelfOrAdmin(#userId, authentication)")
 	@GetMapping("/get/user/{userId}")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<?> getUserByUserId(@PathVariable("userId") int userId){
 		
 		log.info("/get/user/"+userId);

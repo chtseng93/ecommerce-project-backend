@@ -109,7 +109,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 	@Override
 	public void updateOrderStatusById(Integer orderId, String orderStatus) {
 		// TODO Auto-generated method stub
-		orderMapper.updateProductStatusById(orderId, orderStatus);
+		orderMapper.updateOrderStatusById(orderId, orderStatus);
 		
 	}
 

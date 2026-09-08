@@ -30,5 +30,5 @@ public interface UserMapper extends MPJBaseMapper<User>{
 	
 	
 	@Select("select * from user_profile u left join user_role ur on ur.user_id=u.user_id where ur.role_id=#{roleId} ")
-	List<Role> getUserByRoleId(Integer roleId);
+	List<Role> getUserByRoleId(@Param("roleId")Integer roleId);
 }

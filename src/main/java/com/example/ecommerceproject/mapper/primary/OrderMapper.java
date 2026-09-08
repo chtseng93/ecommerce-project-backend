@@ -36,7 +36,7 @@ public interface OrderMapper extends MPJBaseMapper<Order> {
 	
 	
 	@Update("update user_order set status=#{orderStatus} where order_id=#{orderId}")
-	void updateProductStatusById(Integer orderId,String orderStatus);
+	void updateOrderStatusById(@Param("orderId")Integer orderId,@Param("orderStatus")String orderStatus);
 	
 
 	@Results(value = { @Result(property = "orderId", column = "order_id"),

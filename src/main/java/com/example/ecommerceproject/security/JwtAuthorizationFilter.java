@@ -1,7 +1,6 @@
 package com.example.ecommerceproject.security;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -28,10 +28,13 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final ObjectMapper objectMapper;
+    private final CustomUserDetailsService userDetailsService;
 
-    public JwtAuthorizationFilter(JwtUtil jwtUtil, ObjectMapper objectMapper) {
+   public JwtAuthorizationFilter(JwtUtil jwtUtil, ObjectMapper objectMapper,
+                                  CustomUserDetailsService userDetailsService) {
         this.jwtUtil = jwtUtil;
         this.objectMapper = objectMapper;
+        this.userDetailsService = userDetailsService;
     }
     @Override
     protected void doFilterInternal(HttpServletRequest httpRequest, HttpServletResponse httpResponse, FilterChain filterChain) throws ServletException, IOException {
@@ -46,21 +49,21 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
      
             Claims claims = jwtUtil.resolveClaims(httpRequest);
 
-            if(claims != null & jwtUtil.isExpiredClaims(claims)){
+            if(claims != null && jwtUtil.isValid(claims)){
                 String email = claims.getSubject();
                 log.info("email:"+email);
-                Authentication auth = new UsernamePasswordAuthenticationToken(email,"",new ArrayList<>());
+                UserDetails user = userDetailsService.loadUserByUsername(email);
+                Authentication auth = new UsernamePasswordAuthenticationToken(email,"",user.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }
 
         }catch (Exception ex){
-        	errorInfos.put("details",ex.getMessage());
-        	errorInfos.put("message", "Authentication Error");
+            errorInfos.put("details", ex.getMessage());
+            errorInfos.put("message", "Authentication Error");
             httpResponse.setContentType(MediaType.APPLICATION_JSON_VALUE);
-            httpResponse.setStatus(HttpStatus.FORBIDDEN.value());
-
+            httpResponse.setStatus(HttpStatus.UNAUTHORIZED.value());
             objectMapper.writeValue(httpResponse.getWriter(), errorInfos);
-
+            return;
         }
         filterChain.doFilter(httpRequest, httpResponse);
     }

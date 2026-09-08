@@ -46,7 +46,6 @@ public class OrderController{
 	
 	
 	@GetMapping("/all-orders-items")
-	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<List<OrderRes>> getAllOrdersWithIems(){
 		log.info("all-orders-items");
 	    List<OrderVo> orders = orderService.getAllOrdersWithItems();
@@ -63,16 +62,15 @@ public class OrderController{
 
 	}
 	
-
+    @PreAuthorize("@accessGuard.isSelfOrAdmin(#userId, authentication)")
 	@GetMapping("/get/user-order/{userId}")
-	@PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
 	public ResponseEntity<List<OrderRes>> getOrdersWithItemsByUserId(@PathVariable int userId){
 		log.info("/get/user-order/"+userId);
 		List<OrderVo> orders = orderService.getAllOrdersByUserId(userId);
 	    List<OrderRes> orderRess =new ArrayList<>();
 	    if(!CollectionUtils.isEmpty(orders)) {
 	    	orders.forEach(order->{
-	    		System.out.println("order"+order);
+	    		// System.out.println("order"+order);
     		OrderRes response = new OrderRes(order.getOrderId(), order.getUserId() , DateUtils.format(order.getOrderDate()), order.getAddress(), order.getStatus(), order.getTotalPrice(),order.getOrderItems());
 	    		orderRess.add(response);
 	    	});
@@ -84,7 +82,6 @@ public class OrderController{
 	}
 	
 	@PostMapping("/save/order")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<?> insertOrders(@RequestBody OrderReq orderReq){
 		log.info("/save/order");
 		log.info(orderReq.toString());
@@ -100,7 +97,6 @@ public class OrderController{
     }
 
 	@PutMapping("/changeStatus/{orderId}")
-    @PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<String> updateOrderStatus(
 			 @PathVariable int orderId,
 			 @RequestBody OrderReq orderReq) {

@@ -23,7 +23,7 @@ public interface RoleMapper extends MPJBaseMapper<Role>{
 //	List<Role> getRoles();
 	
 	@Select("select r.* from role r left join user_role ur on ur.role_id=r.role_id where ur.user_id=#{userId} ")
-	List<Role> getRoleByUserId(Integer userId);
+	List<Role> getRoleByUserId(@Param("userId")Integer userId);
 	
 	@Results(value = {
 	         @Result(property="roleId", column="role_id"),
@@ -35,7 +35,7 @@ public interface RoleMapper extends MPJBaseMapper<Role>{
 	RoleVo getRoleList(@Param("ew") QueryWrapper queryWrapper);
 
 	@Insert("insert into user_role(user_id, role_id) value (#{userId},#{roleId}) ")
-	void insertUserRole(Integer userId, Integer roleId);
+	void insertUserRole(@Param("userId")Integer userId, @Param("roleId")Integer roleId);
 	
 	
 	
